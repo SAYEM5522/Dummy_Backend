@@ -2,15 +2,16 @@ import express from "express";
 import bodyParser from "body-parser";
 import cors from "cors";
 import mongoose  from "mongoose";
-import { User, validate } from "./DB.js";
+import { User,Bikalpa } from "./DB.js";
 import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken"
 import Joi from "joi";
 const app=express();
 app.use(bodyParser.json());
-app.use(cors());
+app.use(cors({origin:true, credentials: true}));
 
 const Port=process.env.PORT || 5001;
-const connection__Url="mongodb+srv://Job_Find:SL1aF9E66SFILDii@cluster0.ynzcego.mongodb.net/?retryWrites=true&w=majority"
+const connection__Url="mongodb+srv://BMS:SL1aF9E66SFILDii@cluster0.ueicbqz.mongodb.net/test?retryWrites=true&w=majority"
 
 app.get("/",(req,res)=>{
     res.send("Hello World");
@@ -20,21 +21,29 @@ mongoose.connect(connection__Url,{useNewUrlParser:true,useUnifiedTopology:true},
 });
 app.post("/auth",async(req,res)=>{
   try {
-		const { error } = validate(req.body);
-		if (error)
-			return res.status(400).send({ message: error.details[0].message });
+		// const { error } = validate(req.body);
+		// if (error)
+		// 	return res.status(400).send({ message: error.details[0].message });
 
 		const user = await User.findOne({ phone: req.body.phone });
 		if (!user)
 			return res.status(401).send({ message: "Invalid phone number" });
 
-		const validPhoneNumber = await bcrypt.compare(
+		const validPhoneNumber =  bcrypt.compare(
 			req.body.phone,
 			user.phone
 		);
 		if (!validPhoneNumber)
 			return res.status(401).send({ message: "Invalid Phone Number" });
-		const token = user.generateAuthToken();
+			const validatePassard =  bcrypt.compare(
+				req.body.passward,
+				user.passward
+			);
+			if (!validatePassard)
+				return res.status(401).send({ message: "Invalid passward" });
+				const token = jwt.sign({ phone:user.phone }, "secreat123",{
+					expiresIn:"7d"
+				});
 		res.status(200).send({ data: token, message: "Logged in successfully" });
 	} catch (error) {
 		res.status(500).send({ message: "Internal Server Error" });
@@ -52,15 +61,45 @@ app.post("/user",async (req,res)=>{
 			.status(409)
 			.send({ message: "User with given phone number already Exist!" });
 		}
+	
 		await new User({ ...req.body}).save();
-    const {name,phone}=req.body;
-		res.status(201).json({name:name,phone:phone ,message: "User created successfully",id:user._id });
+    const {name,phone,passward}=req.body;
+		const token = jwt.sign({ phone:phone }, "secreat123",{
+      expiresIn:"7d"
+    });
+		res.status(201).json({name:name,phone:phone,token:token ,message: "User created successfully"});
 	// }
   //  catch (error) {
 	// 	res.status(500).send({ message: "Internal Server Error" });
 	// }
 })
+app.post("/Bikalpa",(req,res)=>{
+  const stoppage=req.body.stoppage
+	const distance=req.body.distance
+	const data={
+		stoppage:stoppage,
+		distance:distance
+	}
+	new Bikalpa({...req.body},(err,data)=>{
+    if(err){
+   res.status(401).send(err.message)
+		}
+		else{
+    res.status(200).send(data)
+		}
+	}).save()
 
+})
+app.get("/getBikalpa",(req,res)=>{
+	Bikalpa.find((err,data)=>{
+		if(err){
+			res.status(401).send(err.message)
+			 }
+			 else{
+			 res.status(200).send(data)
+			 }
+	})
+})
 app.listen(Port,()=>{
   console.log("server started at port 5001");
 })
