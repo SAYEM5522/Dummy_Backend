@@ -2,7 +2,7 @@ import express from "express";
 import bodyParser from "body-parser";
 import cors from "cors";
 import mongoose  from "mongoose";
-import { User,Bikalpa } from "./DB.js";
+import { User,Bikalpa, Checker } from "./DB.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken"
 import Joi from "joi";
@@ -73,6 +73,44 @@ app.post("/user",async (req,res)=>{
 	// 	res.status(500).send({ message: "Internal Server Error" });
 	// }
 })
+
+app.post("/Checker",async (req,res)=>{
+ 
+		// const user = await Checker.findOne({ pin: req.body.pin });
+		// if (user){
+		// 	return res
+		// 	.status(409)
+		// 	.send({ message: "User with given pin already Exist!" });
+		// }
+	
+		await new Checker({ ...req.body}).save();
+    const {name,pin}=req.body;
+		const token = jwt.sign({ pin:pin }, "secreat123",{
+      expiresIn:"7d"
+    });
+		res.status(201).json({name:name,pin:pin,token:token ,message: "User created successfully"});
+
+})
+
+app.post("/CheckerLogIn",async(req,res)=>{
+  try {
+
+		const user = await Checker.findOne({ pin: req.body.pin });
+		if (!user)
+			return res.status(401).send({ message: "Invalid pin number" });
+		
+		if (user.pin!==req.body.pin)
+			return res.status(401).send({ message: "Invalid Pin Number" });
+			
+				const token = jwt.sign({ phone:user.phone }, "secreat123",{
+					expiresIn:"7d"
+				});
+		res.status(200).send({ token: token, message: "Logged in successfully" });
+	} catch (error) {
+		res.status(500).send({ message: "Internal Server Error" });
+	}
+})
+
 app.post("/Bikalpa",(req,res)=>{
   const stoppage=req.body.stoppage
 	const distance=req.body.distance

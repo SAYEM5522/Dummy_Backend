@@ -7,8 +7,13 @@ const userSchema = new mongoose.Schema({
 	passward: { type: String, require: true },
 
 });
+const TicketChecker = new mongoose.Schema({
+	name: { type: String, require: true },
+	pin: { type: Number, require: true },
 
-const User = mongoose.model("user", userSchema);
+});
+
+
 const complexityOptions = {
   min: 11,
 };
@@ -37,7 +42,8 @@ const BikalpaAuto=new mongoose.Schema({
 	}
 })
 const Bikalpa = mongoose.model("Bikalpa", BikalpaAuto);
-
-export { User,Bikalpa };
+const User = mongoose.model("user", userSchema);
+const Checker = mongoose.model("TicketChecker", TicketChecker);
+export { User,Bikalpa,Checker };
 
 
