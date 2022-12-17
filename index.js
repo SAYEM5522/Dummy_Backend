@@ -56,11 +56,11 @@ app.post("/user",async (req,res)=>{
 		// 	return res.status(400).send({ message: error.details[0].message });
 		// }
 		const user = await User.findOne({ phone: req.body.phone });
-		if (user){
-			return res
-			.status(409)
-			.send({ message: "User with given phone number already Exist!" });
-		}
+		// if (user){
+		// 	return res
+		// 	.status(409)
+		// 	.send({ message: "User with given phone number already Exist!" });
+		// }
 	
 		await new User({ ...req.body}).save();
     const {name,phone,passward}=req.body;
@@ -96,11 +96,11 @@ app.post("/CheckerLogIn",async(req,res)=>{
   try {
 
 		const user = await Checker.findOne({ pin: req.body.pin });
-		if (!user)
-			return res.status(401).send({ message: "Invalid pin number" });
+		// if (!user)
+		// 	return res.status(401).send({ message: "Invalid pin number" });
 		
-		if (user.pin!==req.body.pin)
-			return res.status(401).send({ message: "Invalid Pin Number" });
+		// if (user.pin!==req.body.pin)
+		// 	return res.status(401).send({ message: "Invalid Pin Number" });
 			
 				const token = jwt.sign({ phone:user.phone }, "secreat123",{
 					expiresIn:"7d"
